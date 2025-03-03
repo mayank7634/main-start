@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Portal - Find Your Dream Job</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="nav-main">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <i class="fas fa-briefcase"></i>
+                Job Portal
+            </a>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links">
+                <a href="index.html" class="active">Home</a>
+                <a href="jobs.html">Jobs</a>
+                <a href="contact.html">Contact</a>
+                <a href="register.html" class="register-btn">Register</a>
+                <a href="login.html">Login</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="content-box">
+            <h1>Find Your Dream Job</h1>
+            <p>Connect with top employers and discover amazing career opportunities.</p>
+            <div class="action-buttons">
+                <a href="login.html" class="btn">Login</a>
+                <a href="register.html" class="btn btn-outline">Register</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Job Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="nav-main">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <i class="fas fa-briefcase"></i>
+                Job Portal
+            </a>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="jobs.html">Jobs</a>
+                <a href="contact.html">Contact</a>
+                <a href="#" class="active">Dashboard</a>
+                <div class="user-info">
+                    <span id="userDisplay"></span>
+                    <button id="logoutBtn" class="register-btn">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="dashboard">
+            <div class="content">
+                <h3>Job Seeker Dashboard</h3>
+                <div class="user-profile">
+                    <h4>Your Profile</h4>
+                    <div class="profile-info">
+                        <p><strong>Name:</strong> <span id="profileName"></span></p>
+                        <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                        <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+                    </div>
+                </div>
+                <div class="dashboard-content">
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-file-alt"></i>
+                            <h5>Applications</h5>
+                            <p>0 Active</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-star"></i>
+                            <h5>Saved Jobs</h5>
+                            <p>0 Saved</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-eye"></i>
+                            <h5>Profile Views</h5>
+                            <p>0 Views</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="dashboard.js"></script>
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    </script>
+</body>
+</html> 

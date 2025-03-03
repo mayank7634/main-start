@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Job Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="nav-main">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <i class="fas fa-briefcase"></i>
+                Job Portal
+            </a>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="jobs.html">Jobs</a>
+                <a href="contact.html">Contact</a>
+                <a href="register.html" class="register-btn">Register</a>
+                <a href="login.html" class="active">Login</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="login-box">
+            <h2>Login to Job Portal</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <p id="errorMessage" class="error-message"></p>
+        </div>
+    </div>
+    <script src="login.js"></script>
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    </script>
+</body>
+</html> 
