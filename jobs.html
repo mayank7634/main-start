@@ -249,12 +249,42 @@
         });
 
         // Handle form submission
-        applicationForm.addEventListener('submit', (e) => {
+        applicationForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            // Here you would typically send the form data to your server
-            alert('Application submitted successfully!');
-            modal.style.display = 'none';
-            applicationForm.reset();
+            
+            // Create the form data object
+            const formData = {
+                applicantName: document.getElementById('applicantName').value.trim(),
+                collegeName: document.getElementById('collegeName').value.trim(),
+                phoneNumber: document.getElementById('phoneNumber').value.trim(),
+                position: document.getElementById('position').value.trim(),
+                age: parseInt(document.getElementById('age').value),
+                technicalSkills: document.getElementById('technicalSkills').value.trim(),
+                email: document.getElementById('email').value.trim()
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/apply', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                alert('Application submitted successfully!');
+                modal.style.display = 'none';
+                applicationForm.reset();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting application. Please try again.');
+            }
         });
     </script>
 </body>

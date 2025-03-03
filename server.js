@@ -1,8 +1,8 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
+const mysql = require('mysql2');
 const cors = require('cors');
-const session = require('express-session');
+const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const port = 3000;
@@ -10,142 +10,244 @@ const port = 3000;
 // Middleware
 app.use(cors({
     origin: 'http://localhost:3000',
-    credentials: true
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Accept']
 }));
+app.use(bodyParser.json());
+app.use(express.static('.')); // Serve static files from current directory
 
-app.use(session({
-    secret: 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: false,
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-}));
-
-app.use(express.json());
-app.use(express.static('.'));
-
-// Database setup
-const db = new sqlite3.Database('users.db', (err) => {
-    if (err) {
-        console.error(err.message);
-    }
-    console.log('Connected to the users database.');
+// First, create a connection without database selected
+const initialConnection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'mayank'
 });
 
-// Create users table
-db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fullname TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-)`, (err) => {
+// Create database if it doesn't exist
+initialConnection.connect((err) => {
     if (err) {
-        console.error(err.message);
+        console.error('Error connecting to MySQL:', err);
+        return;
     }
-    console.log('Users table created or already exists.');
-});
-
-// Middleware to check if user is authenticated
-const isAuthenticated = (req, res, next) => {
-    if (req.session && req.session.user) {
-        next();
-    } else {
-        res.status(401).json({ error: 'Not authenticated' });
-    }
-};
-
-// Register endpoint
-app.post('/register', async (req, res) => {
-    try {
-        const { fullname, email, username, password } = req.body;
+    
+    initialConnection.query('CREATE DATABASE IF NOT EXISTS job_portal', (err) => {
+        if (err) {
+            console.error('Error creating database:', err);
+            return;
+        }
+        console.log('Database created or already exists');
         
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Close the initial connection
+        initialConnection.end();
         
-        // Insert user into database
-        const sql = 'INSERT INTO users (fullname, email, username, password) VALUES (?, ?, ?, ?)';
-        db.run(sql, [fullname, email, username, hashedPassword], function(err) {
-            if (err) {
-                if (err.message.includes('UNIQUE constraint failed')) {
-                    return res.status(400).json({ error: 'Email or username already exists' });
-                }
-                return res.status(500).json({ error: 'Error creating user' });
-            }
-            res.json({ message: 'User registered successfully', userId: this.lastID });
+        // Create the main connection with the database selected
+        const connection = mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            password: 'mayank',
+            database: 'job_portal'
         });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
 
-// Login endpoint
-app.post('/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        
-        // Get user from database
-        db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
+        // Connect to MySQL with database selected
+        connection.connect((err) => {
             if (err) {
-                return res.status(500).json({ error: 'Server error' });
+                console.error('Error connecting to MySQL:', err);
+                return;
             }
-            if (!user) {
-                return res.status(400).json({ error: 'User not found' });
-            }
-            
-            // Check password
-            const validPassword = await bcrypt.compare(password, user.password);
-            if (!validPassword) {
-                return res.status(400).json({ error: 'Invalid password' });
-            }
-            
-            // Store user in session
-            req.session.user = {
-                id: user.id,
-                username: user.username,
-                fullname: user.fullname,
-                email: user.email
-            };
-            
-            res.json({ 
-                message: 'Logged in successfully',
-                user: req.session.user
+            console.log('Connected to MySQL database');
+
+            // Create users table if it doesn't exist
+            const createUsersTableQuery = `
+                CREATE TABLE IF NOT EXISTS users (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    fullname VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) UNIQUE NOT NULL,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `;
+
+            connection.query(createUsersTableQuery, (err) => {
+                if (err) {
+                    console.error('Error creating users table:', err);
+                    return;
+                }
+                console.log('Users table created or already exists');
+            });
+
+            // Create applications table if it doesn't exist
+            const createApplicationsTableQuery = `
+                CREATE TABLE IF NOT EXISTS applications (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    full_name VARCHAR(100) NOT NULL,
+                    college_name VARCHAR(100) NOT NULL,
+                    phone_number VARCHAR(15) NOT NULL,
+                    position VARCHAR(100) NOT NULL,
+                    age INT NOT NULL,
+                    technical_skills TEXT NOT NULL,
+                    email VARCHAR(100) NOT NULL,
+                    application_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `;
+
+            connection.query(createApplicationsTableQuery, (err) => {
+                if (err) {
+                    console.error('Error creating applications table:', err);
+                    return;
+                }
+                console.log('Applications table created or already exists');
             });
         });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
 
-// Check auth status
-app.get('/check-auth', (req, res) => {
-    if (req.session.user) {
-        res.json({ isLoggedIn: true, user: req.session.user });
-    } else {
-        res.json({ isLoggedIn: false });
-    }
-});
+        // Handle user login
+        app.post('/login', async (req, res) => {
+            try {
+                const { username, password } = req.body;
 
-// Protected route example
-app.get('/user-profile', isAuthenticated, (req, res) => {
-    res.json({ user: req.session.user });
-});
+                // Validate required fields
+                if (!username || !password) {
+                    return res.status(400).json({ error: 'Username and password are required' });
+                }
 
-// Logout endpoint
-app.post('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error logging out' });
-        }
-        res.clearCookie('connect.sid');
-        res.json({ message: 'Logged out successfully' });
+                // Find user by username
+                connection.query(
+                    'SELECT * FROM users WHERE username = ?',
+                    [username],
+                    async (err, results) => {
+                        if (err) {
+                            console.error('Database error:', err);
+                            return res.status(500).json({ error: 'Error checking user credentials' });
+                        }
+
+                        if (results.length === 0) {
+                            return res.status(401).json({ error: 'Invalid username or password' });
+                        }
+
+                        const user = results[0];
+
+                        // Compare password
+                        const validPassword = await bcrypt.compare(password, user.password);
+                        if (!validPassword) {
+                            return res.status(401).json({ error: 'Invalid username or password' });
+                        }
+
+                        // Create user object without password
+                        const userResponse = {
+                            id: user.id,
+                            fullname: user.fullname,
+                            email: user.email,
+                            username: user.username
+                        };
+
+                        res.json({
+                            message: 'Login successful',
+                            user: userResponse
+                        });
+                    }
+                );
+            } catch (error) {
+                console.error('Server error:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        });
+
+        // Handle user registration
+        app.post('/register', async (req, res) => {
+            try {
+                const { fullname, email, username, password } = req.body;
+
+                // Validate required fields
+                if (!fullname || !email || !username || !password) {
+                    return res.status(400).json({ error: 'All fields are required' });
+                }
+
+                // Hash the password
+                const hashedPassword = await bcrypt.hash(password, 10);
+
+                // Check if user already exists
+                connection.query(
+                    'SELECT * FROM users WHERE email = ? OR username = ?',
+                    [email, username],
+                    (err, results) => {
+                        if (err) {
+                            console.error('Database error:', err);
+                            return res.status(500).json({ error: 'Error checking user existence' });
+                        }
+
+                        if (results.length > 0) {
+                            return res.status(400).json({ error: 'Email or username already exists' });
+                        }
+
+                        // Insert new user
+                        const query = `
+                            INSERT INTO users (fullname, email, username, password)
+                            VALUES (?, ?, ?, ?)
+                        `;
+
+                        connection.query(
+                            query,
+                            [fullname, email, username, hashedPassword],
+                            (err, results) => {
+                                if (err) {
+                                    console.error('Error creating user:', err);
+                                    return res.status(500).json({ error: 'Failed to create user' });
+                                }
+                                res.json({ message: 'User registered successfully', id: results.insertId });
+                            }
+                        );
+                    }
+                );
+            } catch (error) {
+                console.error('Server error:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        });
+
+        // Handle job application submissions
+        app.post('/api/apply', (req, res) => {
+            try {
+                const {
+                    applicantName,
+                    collegeName,
+                    phoneNumber,
+                    position,
+                    age,
+                    technicalSkills,
+                    email
+                } = req.body;
+
+                // Validate required fields
+                if (!applicantName || !collegeName || !phoneNumber || !position || !age || !technicalSkills || !email) {
+                    return res.status(400).json({ error: 'All fields are required' });
+                }
+
+                const query = `
+                    INSERT INTO applications 
+                    (full_name, college_name, phone_number, position, age, technical_skills, email)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `;
+
+                connection.query(
+                    query,
+                    [applicantName, collegeName, phoneNumber, position, age, technicalSkills, email],
+                    (err, results) => {
+                        if (err) {
+                            console.error('Error saving application:', err);
+                            return res.status(500).json({ error: 'Failed to save application' });
+                        }
+                        res.json({ message: 'Application submitted successfully', id: results.insertId });
+                    }
+                );
+            } catch (error) {
+                console.error('Server error:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        });
     });
 });
 
+// Start server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 }); 
